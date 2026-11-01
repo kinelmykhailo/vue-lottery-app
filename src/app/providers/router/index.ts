@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { setupGuards } from './guards'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: () => import('@/views/HomeView.vue'),
+    component: () => import('@/pages/home').then((m) => m.HomePage),
     meta: {
       title: 'Головна | Vue Lottery App',
       layout: 'default'
@@ -14,7 +14,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/about',
     name: 'about',
-    component: () => import('@/views/AboutView.vue'),
+    component: () => import('@/pages/about').then((m) => m.AboutPage),
     meta: {
       title: 'Про автора | Vue Lottery App',
       layout: 'default'
@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/LoginView.vue'),
+    component: () => import('@/pages/login').then((m) => m.LoginPage),
     meta: {
       title: 'Вхід | Vue Lottery App',
       layout: 'auth',
@@ -33,7 +33,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/users',
     name: 'users',
-    component: () => import('@/views/UsersView.vue'),
+    component: () => import('@/pages/users').then((m) => m.UsersPage),
     meta: {
       title: 'Учасники | Vue Lottery App',
       requiresAuth: true,
@@ -42,7 +42,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/users/:id',
-    component: () => import('@/views/UserDetailsView.vue'),
+    component: () => import('@/pages/user-details').then((m) => m.UserDetailsPage),
     props: true,
     meta: {
       requiresAuth: true,
@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'user-details',
-        component: () => import('@/views/UserDetailsInfo.vue'),
+        component: () => import('@/pages/user-details').then((m) => m.UserDetailsInfo),
         props: true,
         meta: {
           title: 'Деталі користувача | Vue Lottery App',
@@ -63,7 +63,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'edit',
         name: 'user-edit',
-        component: () => import('@/views/UserEditView.vue'),
+        component: () => import('@/pages/user-details').then((m) => m.UserEditView),
         props: true,
         meta: {
           title: 'Редагування користувача | Vue Lottery App',
@@ -76,7 +76,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('@/views/NotFoundView.vue'),
+    component: () => import('@/pages/not-found').then((m) => m.NotFoundPage),
     meta: {
       title: '404 - Сторінку не знайдено | Vue Lottery App',
       layout: 'default'
@@ -91,26 +91,6 @@ export const router = createRouter({
   linkExactActiveClass: 'router-link-exact-active'
 })
 
-router.beforeEach((to) => {
-  const auth = useAuthStore()
-
-  // Guard for protected routes
-  if (to.matched.some((record) => record.meta.requiresAuth) && !auth.isAuthenticated) {
-    return {
-      name: 'login',
-      query: { redirect: to.fullPath }
-    }
-  }
-
-  // Guard for guests-only routes (login page)
-  if (to.matched.some((record) => record.meta.guestOnly) && auth.isAuthenticated) {
-    return { name: 'users' }
-  }
-})
-
-router.afterEach((to) => {
-  const title = (to.meta.title as string) || 'Vue Lottery App'
-  document.title = title
-})
+setupGuards(router)
 
 export default router
