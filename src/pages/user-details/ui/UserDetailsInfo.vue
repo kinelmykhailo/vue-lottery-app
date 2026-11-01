@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import type { User } from '@/types/user'
+import type { User } from '@/entities/user'
 
 const props = defineProps<{
   id: string | number

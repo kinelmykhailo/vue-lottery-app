@@ -1,5 +1,5 @@
-import { http } from '@/api/http-client'
-import type { LoginCredentials, AuthResponse, AuthUser, RefreshResponse } from '@/types/auth'
+import { http } from '@/shared/api'
+import type { LoginCredentials, AuthResponse, AuthUser, RefreshResponse } from '../model/types'
 
 export class AuthService {
   login(credentials: LoginCredentials): Promise<AuthResponse> {

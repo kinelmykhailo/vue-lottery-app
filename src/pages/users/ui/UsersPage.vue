@@ -2,9 +2,9 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useUsersStore } from '@/stores/users'
-import type { User, CreateUserDto } from '@/types/user'
+import type { User, CreateUserDto } from '@/entities/user'
 import UserFormModal from '@/components/UserFormModal.vue'
-import Modal from '@/components/Modal.vue'
+import Modal from '@/shared/ui/Modal/Modal.vue'
 
 const route = useRoute()
 const router = useRouter()

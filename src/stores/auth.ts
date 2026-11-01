@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { AuthUser, LoginCredentials } from '@/types/auth'
-import { ServiceProvider } from '@/services/service-provider'
+import type { AuthUser, LoginCredentials } from '@/entities/session'
+import type { AuthService } from '@/entities/session'
 import {
+  ServiceProvider,
   clearStoredTokens,
   getStoredAccessToken,
   getStoredRefreshToken,
   setStoredTokens
-} from '@/api/http-client'
+} from '@/shared/api'
 
 const USER_STORAGE_KEY = 'auth:user'
 
@@ -29,13 +30,14 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
 
   const isAuthenticated = computed<boolean>(() => Boolean(accessToken.value))
+  const service = () => ServiceProvider.get<AuthService>('auth')
 
   async function login(credentials: LoginCredentials): Promise<void> {
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await ServiceProvider.auth.login(credentials)
+      const response = await service().login(credentials)
       accessToken.value = response.accessToken
       refreshToken.value = response.refreshToken
 
@@ -64,11 +66,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (!accessToken.value) return
 
     try {
-      const current = await ServiceProvider.auth.me()
+      const current = await service().me()
       user.value = current
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(current))
     } catch {
-      // If fetching me fails and token is invalid
+      // ignore
     }
   }
 

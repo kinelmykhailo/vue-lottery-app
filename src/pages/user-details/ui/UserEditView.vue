@@ -3,9 +3,9 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import type { User, UpdateUserDto } from '@/types/user'
+import type { User, UpdateUserDto, UserService } from '@/entities/user'
 import { useUsersStore } from '@/stores/users'
-import { ServiceProvider } from '@/services/service-provider'
+import { ServiceProvider } from '@/shared/api'
 
 const props = defineProps<{
   id: string | number
@@ -80,7 +80,7 @@ onMounted(async () => {
     populateFromUser(props.user)
   } else {
     try {
-      const u = await ServiceProvider.users.getById(Number(props.id))
+      const u = await ServiceProvider.get<UserService>('users').getById(Number(props.id))
       populateFromUser(u)
     } catch (e) {
       serverError.value = (e as Error).message || 'Не вдалося завантажити дані для редагування'

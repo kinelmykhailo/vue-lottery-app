@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import type { User, CreateUserDto, UpdateUserDto } from '@/types/user'
-import { ServiceProvider } from '@/services/service-provider'
+import type { User, CreateUserDto, UpdateUserDto } from '@/entities/user'
+import type { UserService } from '@/entities/user'
+import { ServiceProvider } from '@/shared/api'
 
 export const useUsersStore = defineStore('users', () => {
   const users = ref<User[]>([])
@@ -12,7 +13,6 @@ export const useUsersStore = defineStore('users', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
-  // Lottery winners: array of user ids
   const winnerIds = ref<number[]>([])
 
   const currentPage = computed<number>(() => Math.floor(skip.value / limit.value) + 1)
@@ -30,6 +30,8 @@ export const useUsersStore = defineStore('users', () => {
       users.value.length > 0 &&
       users.value.some((u) => !winnerIds.value.includes(u.id))
   )
+
+  const service = () => ServiceProvider.get<UserService>('users')
 
   function pickWinner(): void {
     if (!canPickWinner.value) return
@@ -55,7 +57,7 @@ export const useUsersStore = defineStore('users', () => {
     searchQuery.value = params.q ?? ''
 
     try {
-      const response = await ServiceProvider.users.getPaginated({
+      const response = await service().getPaginated({
         limit: limit.value,
         skip: skip.value,
         q: searchQuery.value
@@ -75,10 +77,7 @@ export const useUsersStore = defineStore('users', () => {
     error.value = null
 
     try {
-      const created = await ServiceProvider.users.create(data)
-
-      // DummyJSON simulates addition by returning created user with new id (e.g. 209).
-      // We manually update our local state:
+      const created = await service().create(data)
       const fullCreatedUser: User = {
         ...created,
         image: created.image || `https://dummyjson.com/icon/${created.username || 'user'}/128`
@@ -100,9 +99,7 @@ export const useUsersStore = defineStore('users', () => {
     error.value = null
 
     try {
-      const updated = await ServiceProvider.users.update(id, data)
-
-      // Update in local array
+      const updated = await service().update(id, data)
       const index = users.value.findIndex((u) => u.id === id)
       if (index !== -1) {
         users.value[index] = { ...users.value[index], ...updated }
@@ -121,13 +118,9 @@ export const useUsersStore = defineStore('users', () => {
     error.value = null
 
     try {
-      await ServiceProvider.users.delete(id)
-
-      // Remove from local list
+      await service().delete(id)
       users.value = users.value.filter((u) => u.id !== id)
       total.value = Math.max(0, total.value - 1)
-
-      // Also remove from winners if present
       removeWinner(id)
     } catch (e) {
       error.value = (e as Error).message || 'Помилка видалення користувача'

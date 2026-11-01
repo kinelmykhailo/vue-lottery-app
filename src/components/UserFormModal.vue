@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import type { CreateUserDto } from '@/types/user'
+import type { CreateUserDto } from '@/entities/user'
 import Modal from '@/components/Modal.vue'
 
 const props = defineProps<{

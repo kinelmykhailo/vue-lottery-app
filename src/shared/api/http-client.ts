@@ -32,6 +32,8 @@ export function clearStoredTokens(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
   localStorage.removeItem('auth:user')
+  localStorage.removeItem('session:token')
+  localStorage.removeItem('session:user')
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -68,7 +70,7 @@ export async function http<T>(path: string, options: RequestInit = {}): Promise<
     ...((options.headers as Record<string, string>) || {})
   }
 
-  const token = getStoredAccessToken()
+  const token = getStoredAccessToken() || localStorage.getItem('session:token')
   if (token && !headers['Authorization']) {
     headers['Authorization'] = `Bearer ${token}`
   }
@@ -78,8 +80,9 @@ export async function http<T>(path: string, options: RequestInit = {}): Promise<
     headers
   })
 
-  // Interceptor: automatic token refresh on 401
-  const isAuthEndpoint = normalizedPath.startsWith('/auth/login') || normalizedPath.startsWith('/auth/refresh')
+  // 401 Interceptor: refresh token automatically
+  const isAuthEndpoint =
+    normalizedPath.startsWith('/auth/login') || normalizedPath.startsWith('/auth/refresh')
   if (response.status === 401 && !isAuthEndpoint && getStoredRefreshToken()) {
     if (!isRefreshing) {
       isRefreshing = true
@@ -95,7 +98,6 @@ export async function http<T>(path: string, options: RequestInit = {}): Promise<
         })
       }
     } else {
-      // If refresh is already in progress, wait for it
       const newToken = await new Promise<string | null>((resolve) => {
         subscribeTokenRefresh((t) => resolve(t))
       })
@@ -118,12 +120,11 @@ export async function http<T>(path: string, options: RequestInit = {}): Promise<
         errorMessage = String((errData as { message: unknown }).message)
       }
     } catch {
-      // Keep default message if body is not JSON
+      // Keep fallback
     }
     throw new Error(errorMessage)
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return undefined as unknown as T
   }

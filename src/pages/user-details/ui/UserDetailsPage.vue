@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { ServiceProvider } from '@/services/service-provider'
-import type { User } from '@/types/user'
+import { ServiceProvider } from '@/shared/api'
+import type { User, UserService } from '@/entities/user'
 import { useUsersStore } from '@/stores/users'
 
 const props = defineProps<{
@@ -27,7 +27,7 @@ async function loadUser(userId: number): Promise<void> {
   error.value = null
 
   try {
-    const fetched = await ServiceProvider.users.getById(userId)
+    const fetched = await ServiceProvider.get<UserService>('users').getById(userId)
     user.value = fetched
   } catch (e) {
     if (!user.value) {
