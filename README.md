@@ -1,173 +1,170 @@
 # vue-lottery-app
 
-Сучасний SPA-додаток на **Vue 3 + TypeScript + Composition API + Vue Router 4 + Pinia**, реалізований у межах **Лабораторної роботи №5** («Керування маршрутами з використанням vue-router»).
+Сучасний SPA-додаток на **Vue 3 + TypeScript + Composition API + Vue Router 4 + Pinia**, організований за методологією **Feature-Sliced Design (FSD)** та інтегрований із UI-бібліотекою **PrimeVue**. 
+
+Виконано в межах **Лабораторної роботи №6** («Архітектура Feature-Sliced Design (FSD), керування станом за допомогою Pinia та використання UI-бібліотеки компонентів»).
 
 🔗 **Демо на GitHub Pages:** [https://kinelmykhailo.github.io/vue-lottery-app/](https://kinelmykhailo.github.io/vue-lottery-app/)
 
 ---
 
 ## 🎯 Мета лабораторної роботи
-Ознайомлення з концепцією маршрутизації в односторінкових додатках (SPA) за допомогою бібліотеки `vue-router`, застосування патерну **Repository** для роботи із зовнішнім REST API (DummyJSON) та реалізація авторизації на основі **JSON Web Tokens (JWT)** з автоматичним оновленням токенів (interceptor).
+1. Ознайомлення з методологією **Feature-Sliced Design (FSD)** для масштабованої організації фронтенд-застосунку.
+2. Централізоване керування станом за допомогою **Pinia** (підхід Setup Stores) та збереження стану через `pinia-plugin-persistedstate`.
+3. Інтеграція UI-бібліотеки компонентів (**PrimeVue**) через ізолюючі обгортки у шарі `shared/ui`.
+4. Перевірка архітектурних правил імпорту за допомогою лінтерів **Steiger** та **eslint-plugin-boundaries**.
+5. Реалізація перемикача темної/світлої теми з персистентністю.
 
 ---
 
-## 🛠️ Стек технологій
-- **Vue 3** (`<script setup lang="ts">`, Composition API)
-- **Vue Router 4** (SPA маршрутизація, динамічні параметри, вкладені маршрути, navigation guards, lazy loading)
-- **Pinia** (State Management для автентифікації та користувачів)
-- **TypeScript** (сувора типізація моделей, DTO та репозиторіїв)
-- **VeeValidate & Yup** (валідація форм створення, редагування та авторизації)
-- **SCSS + Bootstrap 5** (модульний імпорт виключно необхідних SCSS-партіалів)
-- **REST API (DummyJSON)** (Users & Auth endpoints)
-- **Vite** (швидка збірка та HMR)
-- **ESLint & Prettier** (дотримання Vue style guide)
+## 🏗️ Архітектура Feature-Sliced Design (FSD)
+
+Застосунок розділено на 6 ієрархічних шарів з суворим напрямком залежностей (зверху вниз). Модулі верхніх рівнів можуть імпортувати лише модулі з нижчих рівнів через Public API (`index.ts`). Слайси одного рівня ізольовані один від одного.
+
+```mermaid
+flowchart TD
+    app["app (ініціалізація, провайдери, глобальні стилі)"]
+    pages["pages (сторінки: Home, About, Users, UserDetails, Login, NotFound)"]
+    widgets["widgets (AppHeader, UsersTable, AppFooter)"]
+    features["features (auth, user-form, theme-switcher)"]
+    entities["entities (user, session)"]
+    shared["shared (api, ui, lib, config)"]
+
+    app --> pages
+    app --> widgets
+    app --> features
+    app --> entities
+    app --> shared
+
+    pages --> widgets
+    pages --> features
+    pages --> entities
+    pages --> shared
+
+    widgets --> features
+    widgets --> entities
+    widgets --> shared
+
+    features --> entities
+    features --> shared
+
+    entities --> shared
+```
+
+### Структура директорій
+```
+src/
+├── app/                      # Ініціалізація додатку, роутер, глобальні провайдери та стилі
+│   ├── providers/
+│   │   ├── router/           # Конфігурація Vue Router та Navigation Guards
+│   │   ├── services.ts       # Реєстрація сервісів у ServiceProvider
+│   │   └── ui.ts             # Підключення PrimeVue, ToastService, ConfirmationService
+│   ├── styles/               # SCSS-стилі Bootstrap 5 + PrimeVue теми + Dark mode
+│   └── App.vue               # Кореневий компонент
+├── pages/                    # Сторінки (один слайс = одна сторінка)
+│   ├── home/                 # Головна сторінка
+│   ├── about/                # Сторінка про автора
+│   ├── login/                # Сторінка авторизації
+│   ├── users/                # Сторінка списку користувачів
+│   ├── user-details/         # Профіль користувача та форма редагування
+│   └── not-found/            # 404 сторінка
+├── widgets/                  # Самодостатні великі блоки інтерфейсу
+│   ├── app-header/           # Шапка сайту з Logo, навігацією та ThemeSwitcher
+│   ├── app-footer/           # Підвал сайту
+│   └── users-table/          # Таблиця користувачів з підтвердженням видалення
+├── features/                 # Бізнес-фічі користувача
+│   ├── auth/                 # LoginForm, LogoutButton
+│   ├── user-form/            # UserCreateModal, UserEditForm (VeeValidate + Yup)
+│   └── theme-switcher/       # Перемикач світлої/темної теми (ThemeSwitcher + store)
+├── entities/                 # Бізнес-сутності
+│   ├── user/                 # types, UserService, users.store (Pinia setup store)
+│   └── session/              # types, AuthService, session.store (Pinia setup store)
+├── shared/                   # Перевикористовуваний загальний код
+│   ├── api/                  # http-client, інтерфейси Repository, ServiceProvider
+│   ├── ui/                   # Обгортки: AppButton, AppInput, AppTable, AppConfirmDialog, AppToast, Modal, Logo
+│   ├── lib/                  # Утиліти валідації
+│   └── config/               # Змінні оточення (API_URL)
+└── main.ts                   # Точка входу в застосунок
+```
+
+---
+
+## 📦 Розподіл Repository у FSD
+
+| Складова | Розташування у FSD | Призначення |
+|---|---|---|
+| `http-client`, інтерфейси `Readable`, `Creatable`, `Editable`, `Deletable` | `src/shared/api` | Базовий транспорт та контракти |
+| `ServiceProvider` (універсальний реєстр фабрик) | `src/shared/api/service-provider.ts` | Реєстр без імпортів з `entities` |
+| `User`, `CreateUserDto`, `UpdateUserDto` | `src/entities/user/model/types.ts` | Модель сутності користувача |
+| `UserService` | `src/entities/user/api/user.service.ts` | Реалізація репозиторію користувачів |
+| `AuthService`, `AuthUser` | `src/entities/session/` | Репозиторій та модель сесії |
+| Реєстрація сервісів | `src/app/providers/services.ts` | Підключення конкретних сервісів на рівні `app` |
+
+---
+
+## 💾 Керування станом (Pinia) та порівняння збереження стану
+
+У проєкті використано підхід **Setup Stores** (`defineStore('id', () => { ... })`).
+
+### Порівняння: Ручна реалізація vs `pinia-plugin-persistedstate`
+
+| Критерій | Ручна реалізація (`session.store.ts`) | Плагін `pinia-plugin-persistedstate` |
+|---|---|---|
+| **Код та декларативність** | Вимагає ручних викликів `localStorage.getItem` та `localStorage.setItem` у кожній дії | Декларативна конфігурація: `persist: { paths: [...] }` |
+| **Синхронізація** | Необхідно вручну стежити за очищенням та оновленням кожного окремого ключа | Автоматична серіалізація/десеріалізація при будь-якій зміні стейту |
+| **Безпека типів та помилки парсингу** | Потрібно огортати `JSON.parse` у `try/catch` для запобігання падінню додатку | Вбудована безпечна обробка помилок |
+| **Гнучкість сховища** | Прив'язано до конкретного `localStorage` | Легко перемикається між `localStorage`, `sessionStorage` чи кастомним сховищем |
+
+---
+
+## 🎨 UI-бібліотека PrimeVue та обгортки у `shared/ui`
+
+Для виключення жорсткої прив'язки коду додатку до бібліотеки, компоненти PrimeVue обгорнуто у власні компоненти в `shared/ui`:
+- **`AppButton`** — обгортка над PrimeVue `Button` (підтримка `loading`, `severity`, `outlined`, `size`).
+- **`AppInput`** — обгортка над PrimeVue `InputText` з вбудованим відображенням тексту помилки валідації (`p-error`).
+- **`AppTable`** — обгортка над PrimeVue `DataTable`.
+- **`AppConfirmDialog`** — обгортка над PrimeVue `ConfirmDialog` для підтвердження видалення користувачів через `useConfirm()`.
+- **`AppToast`** — спливаючі сповіщення (Toast) про результати операцій (створення, оновлення, видалення користувача, вхід).
+
+Жоден компонент PrimeVue не імпортується напряму в сторінках чи віджетах — тільки через `shared/ui`.
 
 ---
 
 ## 🚀 Встановлення та запуск
 
-1. **Клонування та перехід у гілку:**
-   ```bash
-   git clone https://github.com/kinelmykhailo/vue-lottery-app.git
-   cd vue-lottery-app
-   git checkout feature/routing
-   ```
+```bash
+# Клонування репозиторію
+git clone https://github.com/kinelmykhailo/vue-lottery-app.git
+cd vue-lottery-app
 
-2. **Встановлення залежностей:**
-   ```bash
-   npm install
-   ```
+# Перехід у гілку лабораторної роботи №6
+git checkout feature/fsd
 
-3. **Налаштування середовища (.env):**
-   Скопіюйте `.env.example` у `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   Вміст `.env`:
-   ```env
-   VITE_API_URL=https://dummyjson.com
-   ```
+# Встановлення залежностей
+npm install
 
-4. **Запуск у режимі розробки:**
-   ```bash
-   npm run dev
-   ```
+# Перевірка FSD-архітектури лінтером Steiger
+npm run lint:fsd
 
-5. **Перевірка типів та лінтера:**
-   ```bash
-   npm run type-check
-   npm run lint
-   ```
+# Перевірка ESLint (включаючи eslint-plugin-boundaries)
+npm run lint
 
-6. **Продакшн збірка та деплой на GitHub Pages:**
-   ```bash
-   npm run build
-   npm run deploy
-   ```
+# Перевірка типів TypeScript
+npm run type-check
+
+# Запуск dev-сервера
+npm run dev
+
+# Продакшн-збірка
+npm run build
+```
 
 ---
 
 ## 🔑 Тестові дані для входу
 - **Username:** `emilys`
 - **Password:** `emilyspass`
-*(На сторінці логіну доступна кнопка автоматичного заповнення форми тестовими даними).*
-
----
-
-## 🏛️ Архітектура та патерн Repository
-
-Застосунок використовує патерн **Repository** для повної ізоляції клієнтського коду від деталей HTTP-запитів:
-
-1. **Generic контракти (`src/services/interfaces.ts`):**
-   - `Readable<T>`
-   - `Creatable<T, TCreate>`
-   - `Editable<T, TUpdate>`
-   - `Deletable`
-2. **Моделі та DTO (`src/types/user.ts`, `src/types/auth.ts`):**
-   - `User`, `CreateUserDto`, `UpdateUserDto`, `UsersResponse`, `AuthResponse`, `LoginCredentials`.
-3. **HTTP-клієнт (`src/api/http-client.ts`):**
-   - Єдина точка виконання `fetch`.
-   - Читає базовий URL виключно з `import.meta.env.VITE_API_URL`.
-   - Додає заголовок `Authorization: Bearer <accessToken>`.
-   - **401 Interceptor:** при отриманні 401 автоматично надсилає запит на `/auth/refresh` з `refreshToken`, зберігає нову пару токенів та повторює вихідний запит без участі користувача.
-4. **Сервіси (`src/services/user.service.ts`, `src/services/auth.service.ts`):**
-   - Реалізують інтерфейси доступу до даних. Жодного захардкодженного URL у компонентах чи сервісах.
-5. **Фабрика `ServiceProvider` (`src/services/service-provider.ts`):**
-   - Єдина точка доступу до екземплярів `UserService` та `AuthService` (`ServiceProvider.users`, `ServiceProvider.auth`).
-6. **Тестованість (`src/services/__tests__/fake-user.service.ts`):**
-   - Реалізація `FakeUserService`, що дозволяє запускати юніт-тести без реального бекенду.
-
----
-
-## 🧭 Маршрутизація (Vue Router)
-
-- `/` — **Головна (Home):** опис проєкту, технологічний стек, огляд можливостей та лінк на GitHub.
-- `/about` — **Про автора (About):** ПІБ студента, блок Technical Skills, посилання на GitHub профіль.
-- `/login` — **Авторизація (Login):** форма входу (VeeValidate + Yup), збереження JWT у Pinia та `localStorage`, відображення помилок сервера, редірект. Використовує `AuthLayout`.
-- `/users` — **Учасники (Users):** захищений маршрут (`meta.requiresAuth`). Таблиця учасників із DummyJSON, пагінація (`limit`, `skip`), пошук, збереження стану в URL query (`/users?page=2&q=john`). Модуль розіграшу (Lottery).
-- `/users/:id` — **Деталі користувача:** динамічний роут, передача параметра через `props: true`.
-- `/users/:id/edit` — **Вкладений маршрут редагування користувача:** форма редагування з валідацією. Після успішного запиту локальний стан у Pinia оновлюється автоматично (імітація DummyJSON мутацій).
-- `/:pathMatch(.*)*` — **404:** сторінка помилки з кнопкою повернення на головну.
-
-### Navigation Guards та мета-поля
-- `beforeEach`:
-  - Неавторизований користувач при спробі відкрити `/users` (або вкладені) перенаправляється на `/login?redirect=...`. Після входу повертається назад.
-  - Авторизований користувач при відкритті `/login` перенаправляється на `/users`.
-- `afterEach`:
-  - Динамічна зміна назви вкладки браузера через `document.title = to.meta.title`.
-- `meta.layout`:
-  - `DefaultLayout` для основних розділів (з хедерами, футером та навігацією).
-  - `AuthLayout` для сторінки входу (сфокусований інтерфейс).
-
----
-
-## 📂 Структура проєкту
-```
-src/
-├── api/
-│   └── http-client.ts           # Базовий HTTP-клієнт + 401 JWT refresh interceptor
-├── assets/
-│   └── styles/
-│       └── main.scss            # Модульні SCSS-стилі Bootstrap 5 + кастомні класи
-├── components/
-│   ├── AppFooter.vue            # Підвал сайту
-│   ├── AppHeader.vue            # Шапка сайту
-│   ├── AppNavigation.vue        # Навігація з активними лінками та кнопкою Logout
-│   ├── BaseButton.vue           # Базова кнопка
-│   ├── BaseInput.vue            # Базове поле вводу
-│   ├── Logo.vue                 # Логотип проєкту
-│   ├── Modal.vue                # Модальне вікно
-│   └── UserFormModal.vue        # Модальне вікно створення користувача (VeeValidate + Yup)
-├── layouts/
-│   ├── AuthLayout.vue           # Макет для авторизації
-│   └── DefaultLayout.vue        # Основний макет
-├── router/
-│   └── index.ts                 # Конфігурація маршрутів, guards, layouts
-├── services/
-│   ├── __tests__/
-│   │   └── fake-user.service.ts # Фейковий сервіс для тестування
-│   ├── auth.service.ts          # Репозиторій авторизації
-│   ├── interfaces.ts            # Контракти патерну Repository
-│   ├── service-provider.ts      # Фабрика ServiceProvider
-│   └── user.service.ts          # Репозиторій користувачів
-├── stores/
-│   ├── auth.ts                  # Pinia-стор авторизації та JWT
-│   └── users.ts                 # Pinia-стор користувачів, пагінації, розіграшу
-├── types/
-│   ├── auth.ts                  # TypeScript-інтерфейси авторизації
-│   └── user.ts                  # TypeScript-інтерфейси DummyJSON User & DTO
-├── views/
-│   ├── AboutView.vue            # Сторінка про автора
-│   ├── HomeView.vue             # Головна сторінка
-│   ├── LoginView.vue            # Сторінка авторизації
-│   ├── NotFoundView.vue         # 404 сторінка
-│   ├── UserDetailsInfo.vue      # Повні дані користувача
-│   ├── UserDetailsView.vue      # Батьківський роут /users/:id (props: true)
-│   ├── UserEditView.vue         # Вкладений роут /users/:id/edit
-│   └── UsersView.vue            # Таблиця учасників, пошук, пагінація, розіграш
-├── App.vue                      # Кореневий компонент з динамічним Layout
-└── main.ts                      # Ініціалізація додатку, Pinia, Router
-```
+*(Доступна кнопка швидкої автопідстановки тестових даних у формі входу).*
 
 ---
 
