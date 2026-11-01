@@ -1,15 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, RouterView } from 'vue-router'
 import { AppHeader } from '@/widgets/app-header'
 import { AppFooter } from '@/widgets/app-footer'
+import { AppToast, AppConfirmDialog } from '@/shared/ui'
+import { useThemeStore } from '@/features/theme-switcher'
 
 const route = useRoute()
+const themeStore = useThemeStore()
+
 const isAuthLayout = computed(() => route.meta.layout === 'auth')
+
+onMounted(() => {
+  themeStore.initTheme()
+})
 </script>
 
 <template>
   <div class="app-root d-flex flex-column min-vh-100">
+    <AppToast />
+    <AppConfirmDialog />
     <AppHeader v-if="!isAuthLayout" />
     <main class="main-content flex-grow-1">
       <div :class="isAuthLayout ? 'auth-container' : 'container py-4'">

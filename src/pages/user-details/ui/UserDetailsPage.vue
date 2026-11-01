@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { ServiceProvider } from '@/shared/api'
-import type { User, UserService } from '@/entities/user'
+import type { User } from '@/entities/user'
 import { useUsersStore } from '@/entities/user'
 
 const props = defineProps<{
@@ -17,7 +16,6 @@ const isLoading = ref<boolean>(false)
 const error = ref<string | null>(null)
 
 async function loadUser(userId: number): Promise<void> {
-  // Check if we already have it in local users store
   const cached = usersStore.users.find((u) => u.id === userId)
   if (cached) {
     user.value = { ...cached }
@@ -27,8 +25,10 @@ async function loadUser(userId: number): Promise<void> {
   error.value = null
 
   try {
-    const fetched = await ServiceProvider.get<UserService>('users').getById(userId)
-    user.value = fetched
+    const fetched = await usersStore.fetchUser(userId)
+    if (fetched) {
+      user.value = fetched
+    }
   } catch (e) {
     if (!user.value) {
       error.value = (e as Error).message || `Користувача з ID ${userId} не знайдено`

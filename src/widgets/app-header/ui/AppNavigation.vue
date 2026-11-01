@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/entities/session'
+import { LogoutButton } from '@/features/auth'
 
 const sessionStore = useSessionStore()
 const { user, isAuthenticated } = storeToRefs(sessionStore)
-const router = useRouter()
-
-function handleLogout(): void {
-  sessionStore.logout()
-  router.push({ name: 'login' })
-}
 </script>
 
 <template>
@@ -40,13 +35,7 @@ function handleLogout(): void {
           />
           <span class="fw-semibold text-dark">{{ user?.username || 'Користувач' }}</span>
         </span>
-        <button
-          type="button"
-          class="btn btn-outline-danger btn-sm px-3"
-          @click="handleLogout"
-        >
-          Logout
-        </button>
+        <LogoutButton />
       </template>
 
       <template v-else>

@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
+import { useToast } from 'primevue/usetoast'
 import type { CreateUserDto } from '@/entities/user'
-import Modal from '@/shared/ui/Modal/Modal.vue'
+import { useUsersStore } from '@/entities/user'
+import { Modal, AppButton, AppInput } from '@/shared/ui'
 
 const props = defineProps<{
   modelValue: boolean
-  isLoading?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  submit: [data: CreateUserDto]
+  created: [user: unknown]
 }>()
+
+const usersStore = useUsersStore()
+const toast = useToast()
 
 const schema = yup.object({
   firstName: yup.string().required("Ім'я є обов'язковим").trim(),
@@ -60,8 +64,25 @@ const [age, ageProps] = defineField('age')
 const [gender, genderProps] = defineField('gender')
 const [phone, phoneProps] = defineField('phone')
 
-const onSubmit = handleSubmit((values) => {
-  emit('submit', values)
+const onSubmit = handleSubmit(async (values) => {
+  try {
+    const created = await usersStore.createUser(values)
+    toast.add({
+      severity: 'success',
+      summary: 'Успішно',
+      detail: `Користувача "${created.firstName} ${created.lastName}" створено!`,
+      life: 3000
+    })
+    emit('created', created)
+    closeModal()
+  } catch (e) {
+    toast.add({
+      severity: 'error',
+      summary: 'Помилка створення',
+      detail: (e as Error).message,
+      life: 4000
+    })
+  }
 })
 
 function closeModal(): void {
@@ -76,99 +97,90 @@ function closeModal(): void {
       <form id="create-user-form" @submit.prevent="onSubmit">
         <div class="row g-2 mb-2">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Ім'я (First name)</label>
-            <input
+            <AppInput
               v-model="firstName"
               v-bind="firstNameProps"
-              type="text"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.firstName }"
+              label="Ім'я (First name)"
               placeholder="Іван"
+              :error="errors.firstName"
+              required
             />
-            <div v-if="errors.firstName" class="invalid-feedback small">{{ errors.firstName }}</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Прізвище (Last name)</label>
-            <input
+            <AppInput
               v-model="lastName"
               v-bind="lastNameProps"
-              type="text"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.lastName }"
+              label="Прізвище (Last name)"
               placeholder="Франко"
+              :error="errors.lastName"
+              required
             />
-            <div v-if="errors.lastName" class="invalid-feedback small">{{ errors.lastName }}</div>
           </div>
         </div>
 
         <div class="row g-2 mb-2">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Email</label>
-            <input
+            <AppInput
               v-model="email"
               v-bind="emailProps"
               type="email"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.email }"
+              label="Email"
               placeholder="user@example.com"
+              :error="errors.email"
+              required
             />
-            <div v-if="errors.email" class="invalid-feedback small">{{ errors.email }}</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Телефон</label>
-            <input
+            <AppInput
               v-model="phone"
               v-bind="phoneProps"
-              type="text"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.phone }"
+              label="Телефон"
               placeholder="+380..."
+              :error="errors.phone"
+              required
             />
-            <div v-if="errors.phone" class="invalid-feedback small">{{ errors.phone }}</div>
           </div>
         </div>
 
         <div class="row g-2 mb-2">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Username</label>
-            <input
+            <AppInput
               v-model="username"
               v-bind="usernameProps"
-              type="text"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.username }"
+              label="Username"
               placeholder="ivanf"
+              :error="errors.username"
+              required
             />
-            <div v-if="errors.username" class="invalid-feedback small">{{ errors.username }}</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Пароль</label>
-            <input
+            <AppInput
               v-model="password"
               v-bind="passwordProps"
               type="password"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.password }"
+              label="Пароль"
               placeholder="••••••••"
+              :error="errors.password"
+              required
             />
-            <div v-if="errors.password" class="invalid-feedback small">{{ errors.password }}</div>
           </div>
         </div>
 
         <div class="row g-2">
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Вік</label>
-            <input
+            <AppInput
               v-model.number="age"
               v-bind="ageProps"
               type="number"
-              class="form-control form-control-sm"
-              :class="{ 'is-invalid': errors.age }"
+              label="Вік"
+              :error="errors.age"
+              required
             />
-            <div v-if="errors.age" class="invalid-feedback small">{{ errors.age }}</div>
           </div>
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Стать</label>
+            <label class="form-label small fw-semibold text-secondary mb-1">
+              Стать <span class="text-danger">*</span>
+            </label>
             <select
               v-model="gender"
               v-bind="genderProps"
@@ -185,18 +197,19 @@ function closeModal(): void {
       </form>
     </template>
     <template #footer>
-      <button type="button" class="btn btn-secondary btn-sm" @click="closeModal">
-        Скасувати
-      </button>
-      <button
+      <AppButton
+        label="Скасувати"
+        severity="secondary"
+        size="small"
+        @click="closeModal"
+      />
+      <AppButton
         type="submit"
         form="create-user-form"
-        class="btn btn-primary btn-sm"
-        :disabled="props.isLoading"
-      >
-        <span v-if="props.isLoading" class="spinner-border spinner-border-sm me-1" role="status" />
-        {{ props.isLoading ? 'Створення...' : 'Створити' }}
-      </button>
+        label="Створити"
+        size="small"
+        :loading="usersStore.isLoading"
+      />
     </template>
   </Modal>
 </template>
