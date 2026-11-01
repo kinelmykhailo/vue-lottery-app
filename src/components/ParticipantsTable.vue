@@ -30,7 +30,6 @@ function toggleSort(field: Exclude<SortField, null>): void {
   }
 }
 
-// Спочатку фільтрація, потім сортування. Вихідний масив participants не змінюється.
 const filteredParticipants = computed<Participant[]>(() => {
   const query = filterQuery.value.trim().toLowerCase()
   if (!query) return props.participants

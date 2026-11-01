@@ -1,7 +1,6 @@
-// Регулярний вираз для email (базова, але достатня для форми реєстрації перевірка).
+
 export const EMAIL_REGEXP = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-// Телефон у форматі +380XXXXXXXXX (код країни +380 та 9 цифр).
 export const PHONE_REGEXP = /^\+380\d{9}$/
 
 export function isRequired(value: string): boolean {
@@ -16,7 +15,6 @@ export function isValidPhone(value: string): boolean {
   return PHONE_REGEXP.test(value.trim())
 }
 
-/** Дата народження не може бути сьогоднішньою чи у майбутньому. */
 export function isValidBirthDate(value: string): boolean {
   if (!value) return false
   const date = new Date(value)

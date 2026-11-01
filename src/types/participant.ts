@@ -1,7 +1,7 @@
 export interface Participant {
   id: string
   name: string
-  dateOfBirth: string // формат yyyy-mm-dd
+  dateOfBirth: string // yyyy-mm-dd
   email: string
   phone: string
 }

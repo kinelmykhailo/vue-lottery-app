@@ -23,7 +23,6 @@ const store = reactive<PersistedState>({
   winnerIds: []
 })
 
-// Відновлення даних з localStorage при завантаженні застосунку.
 onMounted(() => {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return
@@ -33,11 +32,9 @@ onMounted(() => {
     store.participants = parsed.participants ?? []
     store.winnerIds = parsed.winnerIds ?? []
   } catch {
-    // Пошкоджені дані в localStorage ігноруємо, застосунок стартує з порожнім станом.
   }
 })
 
-// Збереження в localStorage через watcher з опцією deep.
 watch(
   store,
   () => {
@@ -46,7 +43,6 @@ watch(
   { deep: true }
 )
 
-/* ---------------------------- Переможці ---------------------------- */
 
 const winners = computed<Participant[]>(() =>
   store.winnerIds
@@ -72,7 +68,6 @@ function removeWinner(id: string): void {
   store.winnerIds = store.winnerIds.filter((winnerId) => winnerId !== id)
 }
 
-/* ------------------------- Реєстрація учасника ------------------------- */
 
 function isEmailTaken(email: string): boolean {
   return store.participants.some((p) => isSameEmail(p.email, email))
@@ -87,7 +82,6 @@ function registerParticipant(data: ParticipantFormData): void {
   store.participants.push({ id, ...data })
 }
 
-/* --------------------------- Редагування --------------------------- */
 
 const isEditModalOpen = ref(false)
 const editingParticipant = ref<Participant | null>(null)

@@ -18,11 +18,6 @@ const EMPTY_ERRORS: ParticipantFormErrors = {
   phone: ''
 }
 
-/**
- * Інкапсулює стан форми учасника (дані, помилки, touched-стан) та валідацію.
- * Використовується і формою реєстрації, і модальним вікном редагування —
- * це і є той самий "багаторазовий" підхід на рівні композиції, а не компонента.
- */
 export function useParticipantForm(
   initial: ParticipantFormData,
   isEmailTaken: (email: string) => boolean
@@ -70,7 +65,6 @@ export function useParticipantForm(
     validateField(field)
   }
 
-  /** Заповнює форму новими даними та скидає помилки/touched без запуску валідації. */
   function resetForm(data: ParticipantFormData): void {
     Object.assign(form, data)
     for (const field of Object.keys(errors) as FieldName[]) {

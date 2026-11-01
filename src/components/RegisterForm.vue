@@ -28,7 +28,6 @@ function onSubmit(): void {
   if (!validateAll()) return
 
   emit('register', { ...form })
-  // Очищення форми не повинно викликати повторну валідацію полів.
   resetForm({ ...EMPTY_FORM })
 }
 </script>
