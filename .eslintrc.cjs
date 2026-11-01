@@ -12,9 +12,9 @@ module.exports = {
     ecmaVersion: 'latest'
   },
   rules: {
-    // "Modal" — свідомий виняток (так названо компонент у завданні лабораторної
-    // роботи); інші компоненти проєкту залишаються багатослівними, як і вимагає правило.
-    'vue/multi-word-component-names': ['error', { ignores: ['Modal'] }],
+    // "Modal", "Logo" — свідомі винятки (за назвами компонентів у лабораторній роботі);
+    // інші компоненти проєкту залишаються багатослівними, як і вимагає правило.
+    'vue/multi-word-component-names': ['error', { ignores: ['Modal', 'Logo'] }],
     'vue/component-name-in-template-casing': ['error', 'PascalCase'],
     'vue/no-unused-vars': 'error',
     '@typescript-eslint/no-unused-vars': 'warn'
