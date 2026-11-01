@@ -4,7 +4,7 @@ import { useRouter, RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
 import type { User, UpdateUserDto, UserService } from '@/entities/user'
-import { useUsersStore } from '@/stores/users'
+import { useUsersStore } from '@/entities/user'
 import { ServiceProvider } from '@/shared/api'
 
 const props = defineProps<{

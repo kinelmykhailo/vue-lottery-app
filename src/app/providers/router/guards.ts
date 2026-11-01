@@ -1,18 +1,18 @@
 import type { Router } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/entities/session'
 
 export function setupGuards(router: Router): void {
   router.beforeEach((to) => {
-    const auth = useAuthStore()
+    const session = useSessionStore()
 
-    if (to.matched.some((record) => record.meta.requiresAuth) && !auth.isAuthenticated) {
+    if (to.matched.some((record) => record.meta.requiresAuth) && !session.isAuthenticated) {
       return {
         name: 'login',
         query: { redirect: to.fullPath }
       }
     }
 
-    if (to.matched.some((record) => record.meta.guestOnly) && auth.isAuthenticated) {
+    if (to.matched.some((record) => record.meta.guestOnly) && session.isAuthenticated) {
       return { name: 'users' }
     }
   })

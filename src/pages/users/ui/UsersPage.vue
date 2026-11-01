@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import { useUsersStore } from '@/stores/users'
+import { useUsersStore } from '@/entities/user'
 import type { User, CreateUserDto } from '@/entities/user'
-import UserFormModal from '@/components/UserFormModal.vue'
+import { UserCreateModal } from '@/features/user-form'
 import Modal from '@/shared/ui/Modal/Modal.vue'
 
 const route = useRoute()
@@ -376,7 +376,7 @@ async function confirmDelete(): Promise<void> {
     </div>
 
     <!-- Create User Modal -->
-    <UserFormModal
+    <UserCreateModal
       v-model="isCreateModalOpen"
       :is-loading="usersStore.isLoading"
       @submit="handleCreateUser"

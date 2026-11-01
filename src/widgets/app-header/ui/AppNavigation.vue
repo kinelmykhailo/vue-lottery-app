@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+import { useSessionStore } from '@/entities/session'
 
-const authStore = useAuthStore()
+const sessionStore = useSessionStore()
+const { user, isAuthenticated } = storeToRefs(sessionStore)
 const router = useRouter()
 
 function handleLogout(): void {
-  authStore.logout()
+  sessionStore.logout()
   router.push({ name: 'login' })
 }
 </script>
@@ -26,17 +28,17 @@ function handleLogout(): void {
     </RouterLink>
 
     <div class="auth-action ms-2 d-flex align-items-center gap-2">
-      <template v-if="authStore.isAuthenticated">
+      <template v-if="isAuthenticated">
         <span class="user-badge d-none d-sm-inline-flex align-items-center gap-1 text-muted small">
           <img
-            v-if="authStore.user?.image"
-            :src="authStore.user.image"
-            :alt="authStore.user.username"
+            v-if="user?.image"
+            :src="user.image"
+            :alt="user.username"
             class="user-avatar rounded-circle"
             width="24"
             height="24"
           />
-          <span class="fw-semibold text-dark">{{ authStore.user?.username || 'Користувач' }}</span>
+          <span class="fw-semibold text-dark">{{ user?.username || 'Користувач' }}</span>
         </span>
         <button
           type="button"

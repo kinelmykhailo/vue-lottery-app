@@ -1,8 +1,7 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import type { User, CreateUserDto, UpdateUserDto } from '@/entities/user'
-import type { UserService } from '@/entities/user'
 import { ServiceProvider } from '@/shared/api'
+import type { UserService, User, CreateUserDto, UpdateUserDto } from '../index'
 
 export const useUsersStore = defineStore('users', () => {
   const users = ref<User[]>([])
@@ -13,10 +12,12 @@ export const useUsersStore = defineStore('users', () => {
   const isLoading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
+  // Lottery winners (max 3)
   const winnerIds = ref<number[]>([])
 
-  const currentPage = computed<number>(() => Math.floor(skip.value / limit.value) + 1)
-  const totalPages = computed<number>(() => Math.max(1, Math.ceil(total.value / limit.value)))
+  const hasUsers = computed(() => users.value.length > 0)
+  const currentPage = computed(() => Math.floor(skip.value / limit.value) + 1)
+  const totalPages = computed(() => Math.max(1, Math.ceil(total.value / limit.value)))
 
   const winners = computed<User[]>(() =>
     winnerIds.value
@@ -24,7 +25,7 @@ export const useUsersStore = defineStore('users', () => {
       .filter((u): u is User => Boolean(u))
   )
 
-  const canPickWinner = computed<boolean>(
+  const canPickWinner = computed(
     () =>
       winnerIds.value.length < 3 &&
       users.value.length > 0 &&
@@ -57,16 +58,33 @@ export const useUsersStore = defineStore('users', () => {
     searchQuery.value = params.q ?? ''
 
     try {
-      const response = await service().getPaginated({
+      const data = await service().getPaginated({
         limit: limit.value,
         skip: skip.value,
         q: searchQuery.value
       })
-      users.value = response.users
-      total.value = response.total
+      users.value = data.users
+      total.value = data.total
     } catch (e) {
-      error.value = (e as Error).message || 'Помилка завантаження списку користувачів'
-      throw e
+      error.value = (e as Error).message || 'Помилка завантаження користувачів'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function fetchUser(id: number): Promise<User | null> {
+    const existing = users.value.find((u) => u.id === id)
+    if (existing) return existing
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const fetched = await service().getById(id)
+      return fetched
+    } catch (e) {
+      error.value = (e as Error).message || `Користувача #${id} не знайдено`
+      return null
     } finally {
       isLoading.value = false
     }
@@ -83,6 +101,7 @@ export const useUsersStore = defineStore('users', () => {
         image: created.image || `https://dummyjson.com/icon/${created.username || 'user'}/128`
       }
 
+      // Manually update local state since DummyJSON mocks mutation
       users.value.unshift(fullCreatedUser)
       total.value += 1
       return fullCreatedUser
@@ -106,19 +125,20 @@ export const useUsersStore = defineStore('users', () => {
       }
       return updated
     } catch (e) {
-      error.value = (e as Error).message || 'Помилка оновлення даних користувача'
+      error.value = (e as Error).message || 'Помилка оновлення даних'
       throw e
     } finally {
       isLoading.value = false
     }
   }
 
-  async function deleteUser(id: number): Promise<void> {
+  async function removeUser(id: number): Promise<void> {
     isLoading.value = true
     error.value = null
 
     try {
       await service().delete(id)
+      // Manually update local state
       users.value = users.value.filter((u) => u.id !== id)
       total.value = Math.max(0, total.value - 1)
       removeWinner(id)
@@ -138,15 +158,17 @@ export const useUsersStore = defineStore('users', () => {
     searchQuery,
     isLoading,
     error,
+    hasUsers,
     winnerIds,
     winners,
     canPickWinner,
     currentPage,
     totalPages,
     fetchUsers,
+    fetchUser,
     createUser,
     updateUser,
-    deleteUser,
+    removeUser,
     pickWinner,
     removeWinner
   }

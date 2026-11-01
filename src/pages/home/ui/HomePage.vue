@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/entities/session'
 
-const authStore = useAuthStore()
+const sessionStore = useSessionStore()
 
 const technologies = [
   { name: 'Vue 3', desc: 'Composition API, <script setup lang="ts">, реактивні рефи та обчислювані властивості' },
@@ -52,10 +52,10 @@ const features = [
         </p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
           <RouterLink
-            :to="authStore.isAuthenticated ? '/users' : '/login'"
+            :to="sessionStore.isAuthenticated ? '/users' : '/login'"
             class="btn btn-primary btn-lg px-4 gap-3 fw-medium"
           >
-            {{ authStore.isAuthenticated ? 'Перейти до учасників' : 'Увійти до системи' }} →
+            {{ sessionStore.isAuthenticated ? 'Перейти до учасників' : 'Увійти до системи' }} →
           </RouterLink>
           <a
             href="https://github.com/kinelmykhailo/vue-lottery-app"

@@ -2,9 +2,9 @@
 import { useRoute, useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import * as yup from 'yup'
-import { useAuthStore } from '@/stores/auth'
+import { useSessionStore } from '@/entities/session'
 
-const authStore = useAuthStore()
+const sessionStore = useSessionStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -29,7 +29,7 @@ const [password, passwordProps] = defineField('password')
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    await authStore.login({
+    await sessionStore.login({
       username: values.username,
       password: values.password
     })
@@ -57,13 +57,13 @@ function fillTestCredentials(): void {
     </div>
 
     <!-- Error Alert -->
-    <div v-if="authStore.error" class="alert alert-danger py-2 px-3 small d-flex align-items-center mb-3">
+    <div v-if="sessionStore.error" class="alert alert-danger py-2 px-3 small d-flex align-items-center mb-3">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="me-2 flex-shrink-0">
         <circle cx="12" cy="12" r="10" stroke-width="2" />
         <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" />
         <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" />
       </svg>
-      <span>{{ authStore.error }}</span>
+      <span>{{ sessionStore.error }}</span>
     </div>
 
     <!-- Test credentials hint banner -->
@@ -120,15 +120,15 @@ function fillTestCredentials(): void {
         <button
           type="submit"
           class="btn btn-primary py-2 fw-semibold"
-          :disabled="authStore.isLoading"
+          :disabled="sessionStore.isLoading"
         >
           <span
-            v-if="authStore.isLoading"
+            v-if="sessionStore.isLoading"
             class="spinner-border spinner-border-sm me-2"
             role="status"
             aria-hidden="true"
           />
-          {{ authStore.isLoading ? 'Вхід...' : 'Увійти' }}
+          {{ sessionStore.isLoading ? 'Вхід...' : 'Увійти' }}
         </button>
       </div>
     </form>
